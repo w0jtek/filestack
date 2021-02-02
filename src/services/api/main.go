@@ -3,21 +3,29 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"fs/src/services/api/payload"
+	"fs/src/services/api/response"
 	"github.com/gorilla/mux"
-	"io/ioutil"
 	"net/http"
 )
 
-type AcceptPayload struct {
-	ImageURL string `json:"imageUrl"`
+func renderResponse(w http.ResponseWriter, response response.AcceptResponse) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(response.HttpCode)
+	bytes, _ := json.Marshal(response)
+	fmt.Fprintf(w, string(bytes))
 }
 
 func handleAccept(w http.ResponseWriter, r *http.Request) {
-	reqBody, _ := ioutil.ReadAll(r.Body)
-	var payload AcceptPayload
-	json.Unmarshal(reqBody, &payload)
+	acceptPayload, err := payload.NewAcceptPayload(r)
+	if err != nil {
+		renderResponse(w, response.AcceptResponse{
+			HttpCode: 400,
+			Message:  "Reading request body has failed.",
+		})
+	}
 
-	fmt.Fprintf(w, payload.ImageURL)
+	renderResponse(w, acceptPayload.Validate())
 }
 
 func handleRequests() {
