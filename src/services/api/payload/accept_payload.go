@@ -28,8 +28,8 @@ func NewAcceptPayload(r *http.Request) (payload *AcceptPayload, err error) {
 
 func (ap *AcceptPayload) Validate() response.AcceptResponse {
 	if len(ap.ImageURL) < 1 {
-		return response.AcceptResponse{HttpCode: 400, Message: "ImageUrl cannot be empty."}
+		return response.NewAcceptResponse(400, "ImageUrl cannot be empty.")
 	}
 
-	return response.AcceptResponse{HttpCode: 200, Message: "OK"}
+	return response.NewAcceptResponse(200, "OK")
 }
