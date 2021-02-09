@@ -2,7 +2,9 @@ package downloader
 
 import (
 	"fmt"
+	"image"
 	"image/jpeg"
+	"image/png"
 	"io"
 	"net/http"
 	"os"
@@ -26,7 +28,7 @@ func (d *Downloader) Fetch(imageURL string) error {
 	}
 	defer httpResponse.Body.Close()
 
-	// // For simplicity, file will be saved to a hard-coded location
+	// For simplicity, file will be saved to a hard-coded location
 	localImagePath := "/tmp/image-fetched"
 	file, err := os.Create(localImagePath)
 	if err != nil {
@@ -40,9 +42,11 @@ func (d *Downloader) Fetch(imageURL string) error {
 	}
 
 	infile, _ := os.Open(localImagePath)
-	_, err = jpeg.DecodeConfig(infile)
+	image.RegisterFormat("png", "\x89PNG\r\n\x1a\n", png.Decode, png.DecodeConfig)
+	image.RegisterFormat("jpeg", "\xff\xd8", jpeg.Decode, jpeg.DecodeConfig)
+	_, _, err = image.Decode(infile)
 	if err != nil {
-		return fmt.Errorf("it is not a valid jpeg file")
+		return fmt.Errorf("it is not a valid png nor jpeg file")
 	}
 
 	return nil
