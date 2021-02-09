@@ -3,13 +3,9 @@ package server
 import (
 	"fs/src/services/api/payload"
 	"fs/src/services/api/response"
-	"image"
-	"image/jpeg"
+	"fs/src/services/api/transformer"
 	"log"
 	"net/http"
-	"os"
-
-	"github.com/oliamb/cutter"
 )
 
 func handleAccept(w http.ResponseWriter, r *http.Request) {
@@ -29,20 +25,17 @@ func handleAccept(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	croppedImg, err := cutter.Crop(img, cutter.Config{
-		Width:  100,
-		Height: 100,
-		Anchor: image.Point{100, 100},
-	})
-	toimg, err := os.Create("/tmp/image-fetched2.tmp")
+	transformer := transformer.ImageTransformer{
+		SourceImg:  img,
+		TargetFile: "/tmp/image-fetched2.tmp",
+	}
+
+	err = transformer.Crop(0, 0, 200, 100)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer toimg.Close()
-	jpeg.Encode(toimg, croppedImg, &jpeg.Options{jpeg.DefaultQuality})
 
 	contentType := "image/" + imageType
 	w.Header().Set("Content-Type", contentType)
 	http.ServeFile(w, r, "/tmp/image-fetched2.tmp")
-
 }
