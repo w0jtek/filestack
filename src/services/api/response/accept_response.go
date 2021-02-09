@@ -13,8 +13,8 @@ type AcceptResponse struct {
 }
 
 // NewAcceptResponse constructor
-func NewAcceptResponse(httpCode int, message string) AcceptResponse {
-	return AcceptResponse{
+func NewAcceptResponse(httpCode int, message string) *AcceptResponse {
+	return &AcceptResponse{
 		HTTPCode: httpCode,
 		Message:  message,
 	}

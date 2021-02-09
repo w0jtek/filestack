@@ -13,7 +13,17 @@ func handleAccept(w http.ResponseWriter, r *http.Request) {
 			400,
 			"Reading request body has failed.",
 		).Render(w)
+		return
 	}
 
-	acceptPayload.Validate().Render(w)
+	localPath := "/tmp/image-fetched.tmp"
+	acceptResponse, imageType := acceptPayload.Validate(localPath)
+	if acceptResponse != nil {
+		acceptResponse.Render(w)
+		return
+	}
+
+	contentType := "image/" + imageType
+	w.Header().Set("Content-Type", contentType)
+	http.ServeFile(w, r, localPath)
 }
