@@ -6,12 +6,9 @@ import (
 	"fmt"
 	dl "fs/src/services/api/downloader"
 	"fs/src/services/api/response"
-	"image"
-	"image/jpeg"
-	"image/png"
+	tr "fs/src/services/api/transformer"
 	"io/ioutil"
 	"net/http"
-	"os"
 )
 
 // AcceptPayload defines the structure of data provided by the user
@@ -38,26 +35,24 @@ func NewAcceptPayload(r *http.Request) (payload *AcceptPayload, err error) {
 }
 
 // Validate validates given payload
-func (ap *AcceptPayload) Validate(localPath string) (imageOut image.Image, acceptResponse *response.AcceptResponse, imageType string) {
-	imageType = ""
+func (ap *AcceptPayload) Validate(localPath string) (acceptResponse *response.AcceptResponse, transformers []tr.Transformer) {
 	if len(ap.ImageURL) < 1 {
 		acceptResponse = response.NewAcceptResponse(400, "ImageUrl cannot be empty.")
 		return
 	}
 
+	for _, command := range ap.Transformations {
+		transformer, err := tr.Create(command)
+		if err != nil {
+			acceptResponse = response.NewAcceptResponse(400, err.Error())
+			return
+		}
+		transformers = append(transformers, transformer)
+	}
 	downloader := dl.NewDownloader()
 	err := downloader.Fetch(ap.ImageURL, localPath)
 	if err != nil {
 		acceptResponse = response.NewAcceptResponse(400, err.Error())
-		return
-	}
-
-	infile, _ := os.Open(localPath)
-	image.RegisterFormat("png", "\x89PNG\r\n\x1a\n", png.Decode, png.DecodeConfig)
-	image.RegisterFormat("jpeg", "\xff\xd8", jpeg.Decode, jpeg.DecodeConfig)
-	imageOut, imageType, err = image.Decode(infile)
-	if err != nil {
-		acceptResponse = response.NewAcceptResponse(400, "it is not a valid png nor jpeg file")
 		return
 	}
 

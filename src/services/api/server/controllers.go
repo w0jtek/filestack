@@ -4,7 +4,6 @@ import (
 	"fs/src/services/api/payload"
 	"fs/src/services/api/response"
 	"fs/src/services/api/transformer"
-	"log"
 	"net/http"
 )
 
@@ -19,23 +18,25 @@ func handleAccept(w http.ResponseWriter, r *http.Request) {
 	}
 
 	localPath := "/tmp/image-fetched.tmp"
-	img, acceptResponse, imageType := acceptPayload.Validate(localPath)
+	acceptResponse, transformers := acceptPayload.Validate(localPath)
 	if acceptResponse != nil {
 		acceptResponse.Render(w)
 		return
 	}
 
-	transformer := transformer.ImageTransformer{
-		SourceImg:  img,
-		TargetFile: "/tmp/image-fetched2.tmp",
-	}
-
-	err = transformer.Crop(0, 0, 200, 100)
+	_, imgType, err := transformer.DecodeImage(localPath)
 	if err != nil {
-		log.Fatal(err)
+		response.NewAcceptResponse(
+			400,
+			"This file is not a valid png nor jpeg image.",
+		).Render(w)
+		return
 	}
 
-	contentType := "image/" + imageType
-	w.Header().Set("Content-Type", contentType)
-	http.ServeFile(w, r, "/tmp/image-fetched2.tmp")
+	for _, transformer := range transformers {
+		transformer.Handle(localPath)
+	}
+
+	w.Header().Set("Content-Type", "image/"+imgType)
+	http.ServeFile(w, r, localPath)
 }
