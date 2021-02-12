@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -17,8 +18,8 @@ func NewServer() *Server {
 }
 
 // Run runs the server
-func (s *Server) Run() {
+func (s *Server) Run(port int) {
 	router := mux.NewRouter()
 	router.HandleFunc("/accept", handleAccept).Methods("POST")
-	http.ListenAndServe(":10000", router)
+	http.ListenAndServe(":"+strconv.Itoa(10000), router)
 }

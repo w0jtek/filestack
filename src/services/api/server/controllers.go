@@ -34,7 +34,14 @@ func handleAccept(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, transformer := range transformers {
-		transformer.Handle(localPath)
+		err = transformer.Handle(localPath)
+		if err != nil {
+			response.NewAcceptResponse(
+				400,
+				err.Error(),
+			).Render(w)
+			return
+		}
 	}
 
 	w.Header().Set("Content-Type", "image/"+imgType)

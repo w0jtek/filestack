@@ -35,5 +35,16 @@ func Create(command string) (transformer Transformer, err error) {
 		return
 	}
 
+	match, _ = regexp.MatchString(`rotate=\d+`, command)
+	if match {
+		degrees := command[7:]
+		param, atoiErr := strconv.Atoi(degrees)
+		if atoiErr != nil {
+			err = fmt.Errorf("Rotate parameter is invalid")
+		}
+		transformer = NewRotate(param)
+		return
+	}
+
 	return nil, fmt.Errorf("Cannot understand command: %s", command)
 }
