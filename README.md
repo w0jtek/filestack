@@ -16,6 +16,7 @@ Available transformation commands:
 
 - exif (removes exif metadata)
 - crop (applies cropping - see examples below)
+- rotate (rotates image by multiple of 90)
 
 # Example payloads
 
@@ -55,5 +56,13 @@ Transformations can be defined as a sequence and each one takes an image from th
         "crop=60,60,400,300",
         "crop=100,100,300,200"
     ]
+}
+```
+
+Rotate:
+```
+{
+	"imageUrl": "https://www.exiv2.org/include/img_1771.jpg",
+	"transformations": ["rotate=90"]
 }
 ```

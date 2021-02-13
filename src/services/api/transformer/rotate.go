@@ -2,7 +2,9 @@ package transformer
 
 import (
 	"fmt"
+	"image"
 	"image/color"
+	"os"
 )
 
 // Rotate rotates image by multiple of 90 degrees
@@ -20,11 +22,71 @@ func NewRotate(degrees int) *Rotate {
 // Handle applies image rotation
 func (t *Rotate) Handle(localPath string) (err error) {
 	if t.degrees%90 != 0 {
-		return fmt.Errorf("Incorrect value for rotate - value should be a multiple of 90.")
+		return fmt.Errorf("Degrees must be a multiple of 90.")
 	}
+
 	img, imgType, err := DecodeImage(localPath)
+
+	reader, err := os.Open(localPath)
+	defer reader.Close()
+	if err != nil {
+		return fmt.Errorf("Cannot read file.")
+	}
+
+	imgConfig, _, err := image.DecodeConfig(reader)
+	if err != nil {
+		return fmt.Errorf("Cannot get image config.")
+	}
+
+	widthSrc := imgConfig.Width
+	heightSrc := imgConfig.Height
+	widthDest := widthSrc
+	heightDest := heightSrc
+
+	var matrixSrc [][]color.Color
+	matrixSrc = make([][]color.Color, heightSrc)
+	for i := range matrixSrc {
+		matrixSrc[i] = make([]color.Color, widthSrc)
+	}
+	for y := 0; y < heightSrc; y++ {
+		for x := 0; x < widthSrc; x++ {
+			matrixSrc[y][x] = img.At(x, y)
+		}
+	}
+
+	degreesModulo := (t.degrees / 90) % 4
+	if degreesModulo == 0 {
+		return nil
+	}
+
+	if degreesModulo == 1 || degreesModulo == 3 {
+		widthDest = heightSrc
+		heightDest = widthSrc
+	}
+	matrixDest := RotateMatrix(matrixSrc, degreesModulo)
+
+	imgDest := image.NewRGBA(image.Rect(0, 0, widthDest-1, heightDest-1))
+	for y := 0; y < heightDest; y++ {
+		for x := 0; x < widthDest; x++ {
+			imgDest.Set(x, y, matrixDest[y][x])
+		}
+	}
+
 	// rewriting image does the job of removing exif metadata
-	return RewriteImage(img, imgType, localPath)
+	return RewriteImage(imgDest, imgType, localPath)
+}
+
+func RotateMatrix(matrix [][]color.Color, rotations int) [][]color.Color {
+	switch rotations {
+	case 1:
+		return RotateMatrixBy90(matrix)
+	case 2:
+		return RotateMatrixBy180(matrix)
+	case 3:
+		return RotateMatrixBy270(matrix)
+	default:
+		return matrix
+	}
 }
 
 func RotateMatrixBy90(matrix [][]color.Color) [][]color.Color {
