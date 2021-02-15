@@ -6,11 +6,12 @@ import (
 	"image/jpeg"
 	"image/png"
 	"os"
+	"strconv"
 )
 
 // Transformer provides functionality of image manipulation
 type Transformer interface {
-	Handle(localPath string) (err error)
+	Handle(localPath string, number int) (destPath string, err error)
 }
 
 // DecodeImage opens file and tries to decode png/jpeg
@@ -21,12 +22,13 @@ func DecodeImage(localPath string) (imgOut image.Image, imgType string, err erro
 	return image.Decode(infile)
 }
 
-// RewriteImage is responsible for saving an image to the file
-func RewriteImage(img image.Image, imgType string, localPath string) error {
-	localTmpPath := localPath + ".tmp"
-	targetImg, err := os.Create(localTmpPath)
+// WriteImage is responsible for saving an image to the file
+func WriteImage(img image.Image, imgType string, localPath string, number int) (destPath string, err error) {
+	destPath = localPath + "-" + strconv.Itoa(number) + "." + imgType
+	targetImg, err := os.Create(destPath)
 	if err != nil {
-		return fmt.Errorf("Failed to create a new file.")
+		err = fmt.Errorf("failed to create a new file")
+		return
 	}
 	defer targetImg.Close()
 
@@ -36,10 +38,9 @@ func RewriteImage(img image.Image, imgType string, localPath string) error {
 	case "jpeg":
 		jpeg.Encode(targetImg, img, &jpeg.Options{Quality: jpeg.DefaultQuality})
 	default:
-		return fmt.Errorf("No support for type %s", imgType)
+		err = fmt.Errorf("no support for type %s", imgType)
+		return
 	}
 
-	os.Rename(localTmpPath, localPath)
-
-	return nil
+	return
 }

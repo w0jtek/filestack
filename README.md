@@ -4,6 +4,7 @@ This aplication is a webservice which allows basic image manipulation:
 
 - removing exif metadata
 - cropping
+- rotation
 
 In order to start the application, go to subdirectory:
 `src/services/api` and type command `go run main.go`. The webserver should be launched and start listening on port `10000`.

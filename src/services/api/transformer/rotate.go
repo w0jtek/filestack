@@ -20,9 +20,10 @@ func NewRotate(degrees int) *Rotate {
 }
 
 // Handle applies image rotation
-func (t *Rotate) Handle(localPath string) (err error) {
+func (t *Rotate) Handle(localPath string, number int) (destPath string, err error) {
 	if t.degrees%90 != 0 {
-		return fmt.Errorf("Degrees must be a multiple of 90.")
+		err = fmt.Errorf("Degrees must be a multiple of 90.")
+		return
 	}
 
 	img, imgType, err := DecodeImage(localPath)
@@ -30,12 +31,14 @@ func (t *Rotate) Handle(localPath string) (err error) {
 	reader, err := os.Open(localPath)
 	defer reader.Close()
 	if err != nil {
-		return fmt.Errorf("Cannot read file.")
+		err = fmt.Errorf("Cannot read file.")
+		return
 	}
 
 	imgConfig, _, err := image.DecodeConfig(reader)
 	if err != nil {
-		return fmt.Errorf("Cannot get image config.")
+		err = fmt.Errorf("Cannot get image config.")
+		return
 	}
 
 	widthSrc := imgConfig.Width
@@ -55,9 +58,6 @@ func (t *Rotate) Handle(localPath string) (err error) {
 	}
 
 	degreesModulo := (t.degrees / 90) % 4
-	if degreesModulo == 0 {
-		return nil
-	}
 
 	if degreesModulo == 1 || degreesModulo == 3 {
 		widthDest = heightSrc
@@ -72,8 +72,8 @@ func (t *Rotate) Handle(localPath string) (err error) {
 		}
 	}
 
-	// rewriting image does the job of removing exif metadata
-	return RewriteImage(imgDest, imgType, localPath)
+	// writing image does the job of removing exif metadata
+	return WriteImage(imgDest, imgType, localPath, number)
 }
 
 func RotateMatrix(matrix [][]color.Color, rotations int) [][]color.Color {

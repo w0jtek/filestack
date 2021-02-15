@@ -10,8 +10,8 @@ func NewExif() *Exif {
 }
 
 // Handle removes exif metadata
-func (t *Exif) Handle(localPath string) (err error) {
+func (t *Exif) Handle(localPath string, number int) (destPath string, err error) {
 	img, imgType, err := DecodeImage(localPath)
 	// rewriting image does the job of removing exif metadata
-	return RewriteImage(img, imgType, localPath)
+	return WriteImage(img, imgType, localPath, number)
 }

@@ -25,7 +25,7 @@ func NewCrop(x int, y int, width int, height int) *Crop {
 }
 
 // Handle applies image cropping
-func (t *Crop) Handle(localPath string) (err error) {
+func (t *Crop) Handle(localPath string, number int) (destPath string, err error) {
 
 	img, imgType, err := DecodeImage(localPath)
 	croppedImg, err := cutter.Crop(img, cutter.Config{
@@ -34,5 +34,5 @@ func (t *Crop) Handle(localPath string) (err error) {
 		Anchor: image.Point{t.x, t.y},
 	})
 
-	return RewriteImage(croppedImg, imgType, localPath)
+	return WriteImage(croppedImg, imgType, localPath, number)
 }

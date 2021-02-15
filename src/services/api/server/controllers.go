@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fs/src/services/api/compressor"
 	"fs/src/services/api/payload"
 	"fs/src/services/api/response"
 	"fs/src/services/api/transformer"
@@ -24,7 +25,7 @@ func handleAccept(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, imgType, err := transformer.DecodeImage(localPath)
+	_, _, err = transformer.DecodeImage(localPath)
 	if err != nil {
 		response.NewAcceptResponse(
 			400,
@@ -33,8 +34,9 @@ func handleAccept(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, transformer := range transformers {
-		err = transformer.Handle(localPath)
+	var transformedPaths []string
+	for i, transformer := range transformers {
+		pathTransformed, err := transformer.Handle(localPath, i)
 		if err != nil {
 			response.NewAcceptResponse(
 				400,
@@ -42,8 +44,13 @@ func handleAccept(w http.ResponseWriter, r *http.Request) {
 			).Render(w)
 			return
 		}
+		transformedPaths = append(transformedPaths, pathTransformed)
 	}
 
-	w.Header().Set("Content-Type", "image/"+imgType)
-	http.ServeFile(w, r, localPath)
+	zipPath := "/tmp/archive.zip"
+	zipCompressor := compressor.NewCompressor(transformedPaths)
+	zipCompressor.Save(zipPath)
+
+	w.Header().Set("Content-Type", "application/zip")
+	http.ServeFile(w, r, zipPath)
 }
