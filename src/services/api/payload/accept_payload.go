@@ -41,6 +41,11 @@ func (ap *AcceptPayload) Validate(localPath string) (acceptResponse *response.Ac
 		return
 	}
 
+	if len(ap.Transformations) < 1 {
+		acceptResponse = response.NewAcceptResponse(400, "At least one transformation is required.")
+		return
+	}
+
 	for _, command := range ap.Transformations {
 		transformer, err := tr.Create(command)
 		if err != nil {

@@ -21,49 +21,12 @@ Available transformation commands:
 
 # Example payloads
 
-The most basic payload will fetch and return the original image without any conversions.
+The payload should include at least one conversion. The conversions are performed from the source image and the collection of converted files will be returned as one zip file.
 
+Example payload including all possible transformations:
 ```
 {
 	"imageUrl": "https://www.exiv2.org/include/img_1771.jpg",
-	"transformations": []
-}
-```
-
-Adding `exif` command will remove the metadata and create a copy of the original image:
-
-```
-{
-	"imageUrl": "https://www.exiv2.org/include/img_1771.jpg",
-	"transformations": ["exif"]
-}
-```
-
-Cropping is possible with `crop` command and it requires four parameters (x, y, width, height) - so the starting point and the size of the subimage:
-
-```
-{
-	"imageUrl": "https://www.exiv2.org/include/img_1771.jpg",
-	"transformations": ["crop=60,60,400,300"]
-}
-```
-
-Transformations can be defined as a sequence and each one takes an image from the previous result:
-
-```
-{
-	"imageUrl": "https://www.exiv2.org/include/img_1771.jpg",
-	"transformations": [
-        "crop=60,60,400,300",
-        "crop=100,100,300,200"
-    ]
-}
-```
-
-Rotate:
-```
-{
-	"imageUrl": "https://www.exiv2.org/include/img_1771.jpg",
-	"transformations": ["rotate=90"]
+	"transformations": ["exif", "crop=0,0,200,80", "rotate=270"]
 }
 ```
